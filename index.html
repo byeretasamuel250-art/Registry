@@ -260,6 +260,11 @@
   .doc-list svg{flex:none;opacity:.6;}
   .doc-list .doc-name{flex:1;}
   .doc-list .doc-date{color:var(--text-soft);font-size:11.5px;}
+  .doc-icon-btn{
+    flex:none;background:none;border:none;cursor:pointer;padding:4px;
+    color:var(--text-soft);border-radius:3px;display:flex;
+  }
+  .doc-icon-btn:hover{color:var(--ink-navy);background:var(--paper);}
 </style>
 </head>
 <body>
@@ -290,11 +295,11 @@
 
 <div class="shell">
   <nav class="rail">
-    <a class="active" title="Dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg></a>
-    <a title="All files"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></a>
+    <a class="active" title="Dashboard" onclick="resetView()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg></a>
+    <a title="All files" onclick="resetView()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></a>
     <a title="Upload" onclick="openUpload()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12m0-12 4 4m-4-4-4 4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg></a>
-    <a title="Departments"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 21h18M5 21V9l7-5 7 5v12M9 21v-6h6v6"/></svg></a>
-    <a title="Reports"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19V5m5 14V9m5 10V3m5 16v-6"/></svg></a>
+    <a title="Departments" onclick="openDepartments()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 21h18M5 21V9l7-5 7 5v12M9 21v-6h6v6"/></svg></a>
+    <a title="Reports" onclick="openReports()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19V5m5 14V9m5 10V3m5 16v-6"/></svg></a>
     <span class="rail-label">RECORDS ARCHIVE</span>
   </nav>
 
@@ -333,6 +338,11 @@
         <option value="">All statuses</option>
         <option value="digitized">Digitized</option>
         <option value="pending">Pending scan</option>
+      </select>
+      <select id="sortBy">
+        <option value="name">Sort: Name (A–Z)</option>
+        <option value="updated">Sort: Recently updated</option>
+        <option value="status">Sort: Status (pending first)</option>
       </select>
       <button class="btn-ghost" onclick="openUpload()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3v12m0-12 4 4m-4-4-4 4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
@@ -403,6 +413,66 @@
   </div>
 </div>
 
+<!-- Edit record modal -->
+<div class="modal-bg" id="editRecordModal">
+  <div class="modal">
+    <h3>Edit personnel file</h3>
+    <div class="modal-sub">Update this employee's details.</div>
+    <input type="hidden" id="edRef">
+    <div class="field">
+      <label>Full name</label>
+      <input id="edName" type="text">
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Job title</label>
+        <input id="edRole" type="text">
+      </div>
+      <div class="field">
+        <label>Department</label>
+        <select id="edDept">
+          <option>Human Resources</option>
+          <option>Finance</option>
+          <option>Operations</option>
+          <option>IT &amp; Systems</option>
+          <option>Sales</option>
+          <option>Customer Support</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="cancel" onclick="closeModal('editRecordModal')">Cancel</button>
+      <button class="confirm" onclick="saveEditRecord()">Save changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- Departments modal -->
+<div class="modal-bg" id="departmentsModal">
+  <div class="modal">
+    <h3>Departments</h3>
+    <div class="modal-sub">File count and digitization progress by department.</div>
+    <ul class="doc-list" id="departmentsList"></ul>
+    <div class="modal-actions">
+      <button class="cancel" onclick="closeModal('departmentsModal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Reports modal -->
+<div class="modal-bg" id="reportsModal">
+  <div class="modal">
+    <h3>Registry summary</h3>
+    <div class="modal-sub">Snapshot of the archive right now.</div>
+    <div class="detail-grid" id="reportsGrid" style="border-top:none;"></div>
+    <div class="modal-sub" style="margin-bottom:8px;">Recently added files</div>
+    <ul class="doc-list" id="reportsRecent"></ul>
+    <div class="modal-actions">
+      <button class="cancel" onclick="closeModal('reportsModal')">Close</button>
+    </div>
+  </div>
+</div>
+
 <!-- Detail modal -->
 <div class="modal-bg" id="detailModal">
   <div class="modal wide" id="detailContent"></div>
@@ -440,12 +510,20 @@ function render(){
   const q = document.getElementById('searchInput').value.toLowerCase();
   const dept = document.getElementById('deptFilter').value;
   const status = document.getElementById('statusFilter').value;
+  const sortBy = document.getElementById('sortBy').value;
   const grid = document.getElementById('fileGrid');
-  const results = files.filter(f=>{
+  let results = files.filter(f=>{
     const matchesQ = !q || f.name.toLowerCase().includes(q) || f.ref.toLowerCase().includes(q) || f.dept.toLowerCase().includes(q);
     const matchesDept = !dept || f.dept===dept;
     const matchesStatus = !status || f.status===status;
     return matchesQ && matchesDept && matchesStatus;
+  });
+
+  results = results.slice().sort((a,b)=>{
+    if(sortBy==='name') return a.name.localeCompare(b.name);
+    if(sortBy==='status') return (a.status==='pending'?0:1) - (b.status==='pending'?0:1);
+    if(sortBy==='updated') return (a.updated==='just now'?0:1) - (b.updated==='just now'?0:1);
+    return 0;
   });
 
   grid.innerHTML = results.length ? results.map(f=>`
@@ -520,12 +598,82 @@ function attachDoc(){
   const ref = document.getElementById('uploadTarget').value;
   const f = files.find(x=>x.ref===ref);
   if(f){
-    f.docs.push({name: selectedFile.name, date:"just now"});
+    f.docs.push({name: selectedFile.name, date:"just now", blob: selectedFile});
     f.status = "digitized";
     f.updated = "just now";
   }
   closeModal('uploadModal');
   render();
+}
+
+function openEditRecord(ref){
+  const f = files.find(x=>x.ref===ref);
+  if(!f) return;
+  document.getElementById('edRef').value = f.ref;
+  document.getElementById('edName').value = f.name;
+  document.getElementById('edRole').value = f.role;
+  document.getElementById('edDept').value = f.dept;
+  document.getElementById('editRecordModal').classList.add('show');
+}
+
+function saveEditRecord(){
+  const ref = document.getElementById('edRef').value;
+  const f = files.find(x=>x.ref===ref);
+  if(!f) return;
+  const name = document.getElementById('edName').value.trim();
+  const role = document.getElementById('edRole').value.trim();
+  if(!name || !role) return;
+  f.name = name;
+  f.role = role;
+  f.dept = document.getElementById('edDept').value;
+  f.updated = "just now";
+  closeModal('editRecordModal');
+  if(currentDetailRef === ref) openDetail(ref);
+  render();
+}
+
+function deleteRecord(ref){
+  const f = files.find(x=>x.ref===ref);
+  if(!f) return;
+  if(!confirm(`Remove ${f.name}'s file? This can't be undone.`)) return;
+  files = files.filter(x=>x.ref!==ref);
+  closeModal('detailModal');
+  render();
+}
+
+function openDepartments(){
+  const depts = {};
+  files.forEach(f=>{
+    if(!depts[f.dept]) depts[f.dept] = {total:0, digitized:0};
+    depts[f.dept].total++;
+    if(f.status==='digitized') depts[f.dept].digitized++;
+  });
+  const list = Object.entries(depts).sort((a,b)=>b[1].total-a[1].total);
+  document.getElementById('departmentsList').innerHTML = list.length ? list.map(([name,d])=>`
+    <li>
+      <span class="doc-name">${name}</span>
+      <span class="doc-date">${d.digitized}/${d.total} digitized</span>
+    </li>`).join("") : `<li style="color:var(--text-soft);">No departments yet.</li>`;
+  document.getElementById('departmentsModal').classList.add('show');
+}
+
+function openReports(){
+  const total = files.length;
+  const digitized = files.filter(f=>f.status==='digitized').length;
+  const totalDocs = files.reduce((sum,f)=>sum+f.docs.length,0);
+  document.getElementById('reportsGrid').innerHTML = `
+    <div><span class="k">Total files</span><span class="v">${total}</span></div>
+    <div><span class="k">Digitized</span><span class="v">${digitized} (${total?Math.round(digitized/total*100):0}%)</span></div>
+    <div><span class="k">Pending scan</span><span class="v">${total-digitized}</span></div>
+    <div><span class="k">Documents on file</span><span class="v">${totalDocs}</span></div>
+  `;
+  const recent = files.filter(f=>f.updated==='just now').slice(0,5);
+  document.getElementById('reportsRecent').innerHTML = recent.length ? recent.map(f=>`
+    <li>
+      <span class="doc-name">${f.name}</span>
+      <span class="doc-date">${f.ref}</span>
+    </li>`).join("") : `<li style="color:var(--text-soft);">No recent activity this session.</li>`;
+  document.getElementById('reportsModal').classList.add('show');
 }
 
 function openNewRecord(){
@@ -548,7 +696,75 @@ function createRecord(){
   render();
 }
 
+let currentDetailRef = null;
+
+function renderDocItems(f){
+  if(!f.docs.length) return `<li style="color:var(--text-soft);">No documents on file yet.</li>`;
+  return f.docs.map((d,i)=>`
+    <li>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/><path d="M15 2v5h5"/></svg>
+      <span class="doc-name" id="docName-${i}" ${d.blob ? `onclick="openDoc('${f.ref}',${i})" style="cursor:pointer;text-decoration:underline;text-decoration-style:dotted;"` : ''}>${d.name}</span>
+      <span class="doc-date">${d.date}</span>
+      <button class="doc-icon-btn" title="Rename" onclick="startRenameDoc('${f.ref}',${i})">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+      </button>
+      <button class="doc-icon-btn" title="Remove" onclick="removeDoc('${f.ref}',${i})">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg>
+      </button>
+    </li>`).join("");
+}
+
+function refreshDocList(){
+  const f = files.find(x=>x.ref===currentDetailRef);
+  if(!f) return;
+  document.getElementById('docList').innerHTML = renderDocItems(f);
+  // status badge and card meta may have changed (e.g. all docs removed)
+  render();
+}
+
+function openDoc(ref,i){
+  const f = files.find(x=>x.ref===ref);
+  const d = f && f.docs[i];
+  if(d && d.blob){
+    window.open(URL.createObjectURL(d.blob), '_blank');
+  }
+}
+
+function startRenameDoc(ref,i){
+  const f = files.find(x=>x.ref===ref);
+  const d = f && f.docs[i];
+  if(!d) return;
+  const span = document.getElementById(`docName-${i}`);
+  span.outerHTML = `<input type="text" id="docNameInput-${i}" value="${d.name}" style="flex:1;font-size:12.5px;padding:3px 6px;border:1px solid var(--gold);border-radius:2px;font-family:'IBM Plex Sans',sans-serif;" onkeydown="if(event.key==='Enter') confirmRenameDoc('${ref}',${i}); if(event.key==='Escape') refreshDocList();">`;
+  const input = document.getElementById(`docNameInput-${i}`);
+  input.focus();
+  input.select();
+  input.addEventListener('blur', ()=>confirmRenameDoc(ref,i));
+}
+
+function confirmRenameDoc(ref,i){
+  const input = document.getElementById(`docNameInput-${i}`);
+  if(!input) return;
+  const f = files.find(x=>x.ref===ref);
+  const newName = input.value.trim();
+  if(f && f.docs[i] && newName){
+    f.docs[i].name = newName;
+  }
+  refreshDocList();
+}
+
+function removeDoc(ref,i){
+  const f = files.find(x=>x.ref===ref);
+  if(!f) return;
+  f.docs.splice(i,1);
+  if(f.docs.length === 0){
+    f.status = "pending";
+  }
+  refreshDocList();
+}
+
 function openDetail(ref){
+  currentDetailRef = ref;
   const f = files.find(x=>x.ref===ref);
   if(!f) return;
   document.getElementById('detailContent').innerHTML = `
@@ -567,15 +783,12 @@ function openDetail(ref){
       <div><span class="k">Last updated</span><span class="v">${f.updated}</span></div>
     </div>
     <div class="modal-sub" style="margin-bottom:8px;">Attached documents</div>
-    <ul class="doc-list">
-      ${f.docs.length ? f.docs.map(d=>`
-        <li>
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/><path d="M15 2v5h5"/></svg>
-          <span class="doc-name">${d.name}</span>
-          <span class="doc-date">${d.date}</span>
-        </li>`).join("") : `<li style="color:var(--text-soft);">No documents on file yet.</li>`}
+    <ul class="doc-list" id="docList">
+      ${renderDocItems(f)}
     </ul>
     <div class="modal-actions">
+      <button class="cancel" style="margin-right:auto;color:var(--stamp-red);border-color:var(--stamp-red);" onclick="deleteRecord('${f.ref}')">Delete file</button>
+      <button class="cancel" onclick="closeModal('detailModal'); openEditRecord('${f.ref}')">Edit details</button>
       <button class="cancel" onclick="closeModal('detailModal')">Close</button>
       <button class="confirm" onclick="closeModal('detailModal'); openUpload('${f.ref}')">Upload scan</button>
     </div>
@@ -588,9 +801,23 @@ function closeModal(id){document.getElementById(id).classList.remove('show');}
 document.getElementById('searchInput').addEventListener('input', render);
 document.getElementById('deptFilter').addEventListener('change', render);
 document.getElementById('statusFilter').addEventListener('change', render);
+document.getElementById('sortBy').addEventListener('change', render);
 document.querySelectorAll('.modal-bg').forEach(bg=>{
   bg.addEventListener('click', e=>{ if(e.target===bg) bg.classList.remove('show'); });
 });
+document.addEventListener('keydown', e=>{
+  if(e.key === 'Escape'){
+    document.querySelectorAll('.modal-bg.show').forEach(bg=>bg.classList.remove('show'));
+  }
+});
+
+function resetView(){
+  document.getElementById('searchInput').value = '';
+  document.getElementById('deptFilter').value = '';
+  document.getElementById('statusFilter').value = '';
+  document.getElementById('sortBy').value = 'name';
+  render();
+}
 
 render();
 </script>
