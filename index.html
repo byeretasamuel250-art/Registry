@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Personnel Registry</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink-navy:#1B2A4A;
+    --navy-deep:#0F1B33;
+    --paper:#EFEEE4;
+    --paper-card:#FBFAF4;
+    --gold:#AD8A3E;
+    --gold-soft:#E4D5AC;
+    --stamp-red:#9C3B2E;
+    --stamp-green:#3F6B4A;
+    --text-ink:#20211D;
+    --text-soft:#5C5A4E;
+    --line:#D8D3C0;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--text-ink);
+    font-family:'IBM Plex Sans',sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{background:var(--gold-soft);}
+
+  /* ---- Header ---- */
+  header{
+    background:var(--navy-deep);
+    color:#F2EFE4;
+    display:flex;
+    align-items:center;
+    gap:16px;
+    padding:14px 24px;
+    border-bottom:3px solid var(--gold);
+  }
+  .badge{
+    width:38px;height:38px;flex:none;
+    display:flex;align-items:center;justify-content:center;
+  }
+  header h1{
+    font-family:'Source Serif 4',serif;
+    font-weight:600;
+    font-size:19px;
+    margin:0;
+    letter-spacing:0.2px;
+  }
+  header .sub{
+    font-size:11.5px;
+    color:#B9BFCF;
+    margin-top:1px;
+    letter-spacing:0.3px;
+  }
+  .search-wrap{
+    flex:1;
+    max-width:460px;
+    margin-left:24px;
+    position:relative;
+  }
+  .search-wrap input{
+    width:100%;
+    background:#22335A;
+    border:1px solid #3A4A72;
+    color:#F2EFE4;
+    padding:9px 12px 9px 34px;
+    border-radius:3px;
+    font-family:'IBM Plex Sans',sans-serif;
+    font-size:13.5px;
+  }
+  .search-wrap input::placeholder{color:#8B93AC;}
+  .search-wrap svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);opacity:0.6;}
+  .officer-chip{
+    margin-left:auto;
+    display:flex;align-items:center;gap:9px;
+    font-size:12.5px;color:#D8DBE6;
+    padding-left:16px;
+    border-left:1px solid #33456E;
+  }
+  .officer-chip .dot{
+    width:28px;height:28px;border-radius:50%;
+    background:var(--gold);color:var(--navy-deep);
+    display:flex;align-items:center;justify-content:center;
+    font-weight:600;font-size:12px;font-family:'IBM Plex Mono',monospace;
+  }
+
+  /* ---- Layout ---- */
+  .shell{display:flex;min-height:calc(100vh - 64px);}
+  nav.rail{
+    width:64px;flex:none;
+    background:var(--ink-navy);
+    display:flex;flex-direction:column;align-items:center;
+    padding:18px 0;gap:6px;
+  }
+  nav.rail a{
+    width:40px;height:40px;border-radius:6px;
+    display:flex;align-items:center;justify-content:center;
+    color:#AAB4CC;text-decoration:none;
+    transition:background .15s, color .15s;
+    cursor:pointer;
+  }
+  nav.rail a svg{width:19px;height:19px;}
+  nav.rail a.active{background:var(--gold);color:var(--navy-deep);}
+  nav.rail a:hover:not(.active){background:#25365C;color:#F2EFE4;}
+  nav.rail .rail-label{
+    font-size:8.5px;letter-spacing:.4px;color:#7480A0;margin-top:auto;
+    writing-mode:vertical-rl;text-transform:uppercase;padding-bottom:6px;
+  }
+
+  main{flex:1;padding:26px 30px 50px;max-width:1180px;}
+
+  /* ---- Stat strip ---- */
+  .stats{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:26px;
+  }
+  .stat{
+    background:var(--paper-card);border:1px solid var(--line);
+    border-radius:4px;padding:15px 17px;position:relative;overflow:hidden;
+  }
+  .stat::before{
+    content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--gold);
+  }
+  .stat .num{
+    font-family:'Source Serif 4',serif;font-weight:600;font-size:26px;line-height:1;
+  }
+  .stat .lbl{font-size:11.5px;color:var(--text-soft);margin-top:6px;letter-spacing:.2px;}
+  .stat.pending::before{background:var(--stamp-red);}
+  .stat.today::before{background:var(--stamp-green);}
+
+  /* ---- Toolbar ---- */
+  .toolbar{
+    display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap;
+  }
+  .toolbar h2{
+    font-family:'Source Serif 4',serif;font-size:20px;font-weight:600;margin:0 auto 0 0;
+  }
+  select{
+    font-family:'IBM Plex Sans',sans-serif;font-size:12.5px;
+    padding:7px 10px;border:1px solid var(--line);border-radius:3px;
+    background:var(--paper-card);color:var(--text-ink);
+  }
+  .btn-primary, .btn-ghost{
+    padding:8px 16px;border-radius:3px;font-size:13px;font-weight:500;
+    cursor:pointer;display:flex;align-items:center;gap:7px;
+    font-family:'IBM Plex Sans',sans-serif;
+  }
+  .btn-primary{background:var(--ink-navy);color:#F2EFE4;border:none;}
+  .btn-primary:hover{background:var(--navy-deep);}
+  .btn-ghost{background:transparent;border:1px solid var(--line);color:var(--text-ink);}
+  .btn-ghost:hover{border-color:var(--ink-navy);}
+
+  /* ---- File grid ---- */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;}
+  .card{
+    background:var(--paper-card);border:1px solid var(--line);border-radius:5px;
+    padding:15px 16px 14px;display:flex;flex-direction:column;gap:10px;
+    transition:box-shadow .15s, transform .15s;
+  }
+  .card:hover{box-shadow:0 3px 14px rgba(27,42,74,0.1);transform:translateY(-1px);}
+  .card-top{display:flex;gap:11px;align-items:flex-start;}
+  .avatar{
+    width:42px;height:42px;border-radius:4px;flex:none;
+    background:linear-gradient(160deg,#2B3E66,var(--navy-deep));
+    color:#D8DBE6;display:flex;align-items:center;justify-content:center;
+    font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:500;
+  }
+  .card-name{font-weight:600;font-size:14.5px;line-height:1.25;}
+  .card-role{font-size:12px;color:var(--text-soft);margin-top:1px;}
+  .card-ref{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-soft);
+    letter-spacing:.2px;
+  }
+  .card-meta{
+    display:flex;justify-content:space-between;align-items:center;
+    font-size:11.5px;color:var(--text-soft);border-top:1px dashed var(--line);
+    padding-top:9px;
+  }
+  .stamp{
+    font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;
+    letter-spacing:.6px;padding:3px 8px;border-radius:2px;
+    border:1.5px solid currentColor;transform:rotate(-2deg);text-transform:uppercase;
+  }
+  .stamp.digitized{color:var(--stamp-green);}
+  .stamp.pending{color:var(--stamp-red);transform:rotate(1.5deg);}
+  .card-actions{display:flex;gap:8px;margin-top:2px;}
+  .card-actions button{
+    flex:1;font-size:11.5px;padding:6px 0;border-radius:3px;cursor:pointer;
+    font-family:'IBM Plex Sans',sans-serif;font-weight:500;
+  }
+  .card-actions .view{background:transparent;border:1px solid var(--line);color:var(--text-ink);}
+  .card-actions .view:hover{border-color:var(--ink-navy);}
+  .card-actions .scan{background:var(--gold);border:1px solid var(--gold);color:#2B2107;}
+  .card-actions .scan:hover{background:#997A34;}
+
+  .empty{
+    text-align:center;padding:60px 20px;color:var(--text-soft);
+    font-size:13.5px;grid-column:1/-1;
+  }
+
+  /* ---- Modal ---- */
+  .modal-bg{
+    position:fixed;inset:0;background:rgba(15,20,36,0.55);
+    display:none;align-items:center;justify-content:center;z-index:50;padding:20px;
+  }
+  .modal-bg.show{display:flex;}
+  .modal{
+    background:var(--paper-card);border-radius:6px;width:420px;max-width:92vw;
+    padding:22px 24px 20px;border-top:4px solid var(--gold);
+    max-height:90vh;overflow-y:auto;
+  }
+  .modal.wide{width:520px;}
+  .modal h3{font-family:'Source Serif 4',serif;font-size:17px;margin:0 0 3px;}
+  .modal .modal-sub{font-size:12px;color:var(--text-soft);margin-bottom:16px;}
+  .dropzone{
+    border:2px dashed var(--line);border-radius:5px;padding:28px 16px;
+    text-align:center;color:var(--text-soft);font-size:12.5px;margin-bottom:16px;
+    background:var(--paper);
+  }
+  .dropzone svg{margin-bottom:8px;opacity:.55;}
+  .modal-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:4px;}
+  .modal-actions button{
+    padding:8px 15px;border-radius:3px;font-size:12.5px;cursor:pointer;
+    font-family:'IBM Plex Sans',sans-serif;font-weight:500;
+  }
+  .modal-actions .cancel{background:none;border:1px solid var(--line);color:var(--text-ink);}
+  .modal-actions .confirm{background:var(--ink-navy);border:1px solid var(--ink-navy);color:#F2EFE4;}
+
+  .field{margin-bottom:12px;}
+  .field label{display:block;font-size:11.5px;color:var(--text-soft);margin-bottom:4px;letter-spacing:.2px;}
+  .field input, .field select{
+    width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:3px;
+    font-family:'IBM Plex Sans',sans-serif;font-size:13px;background:var(--paper);
+    color:var(--text-ink);
+  }
+  .field-row{display:flex;gap:10px;}
+  .field-row .field{flex:1;}
+
+  /* ---- Detail view ---- */
+  .detail-top{display:flex;gap:14px;align-items:center;margin-bottom:16px;}
+  .detail-top .avatar{width:52px;height:52px;font-size:17px;}
+  .detail-top .card-name{font-size:17px;}
+  .detail-grid{
+    display:grid;grid-template-columns:1fr 1fr;gap:12px 16px;
+    border-top:1px solid var(--line);border-bottom:1px dashed var(--line);
+    padding:14px 0;margin-bottom:16px;
+  }
+  .detail-grid div span.k{display:block;font-size:10.5px;color:var(--text-soft);text-transform:uppercase;letter-spacing:.3px;margin-bottom:2px;}
+  .detail-grid div span.v{font-size:13px;}
+  .doc-list{list-style:none;margin:0 0 4px;padding:0;}
+  .doc-list li{
+    display:flex;align-items:center;gap:9px;padding:9px 0;
+    border-bottom:1px solid var(--line);font-size:12.5px;
+  }
+  .doc-list li:last-child{border-bottom:none;}
+  .doc-list svg{flex:none;opacity:.6;}
+  .doc-list .doc-name{flex:1;}
+  .doc-list .doc-date{color:var(--text-soft);font-size:11.5px;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="badge">
+    <svg viewBox="0 0 40 40" width="34" height="34">
+      <rect x="7" y="4" width="20" height="26" rx="2" fill="none" stroke="#E4D5AC" stroke-width="1.6"/>
+      <path d="M27 4 L34 11 L27 11 Z" fill="#E4D5AC"/>
+      <line x1="12" y1="14" x2="22" y2="14" stroke="#E4D5AC" stroke-width="1.4"/>
+      <line x1="12" y1="19" x2="22" y2="19" stroke="#E4D5AC" stroke-width="1.4"/>
+      <line x1="12" y1="24" x2="18" y2="24" stroke="#E4D5AC" stroke-width="1.4"/>
+    </svg>
+  </div>
+  <div>
+    <h1 id="orgTitle">Personnel Registry</h1>
+    <div class="sub">Employee Records &amp; Archive</div>
+  </div>
+  <div class="search-wrap">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8B93AC" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+    <input id="searchInput" type="text" placeholder="Search by name, employee ID, or department…">
+  </div>
+  <div class="officer-chip">
+    <div class="dot">RA</div>
+    <span>Records Admin</span>
+  </div>
+</header>
+
+<div class="shell">
+  <nav class="rail">
+    <a class="active" title="Dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg></a>
+    <a title="All files"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></a>
+    <a title="Upload" onclick="openUpload()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12m0-12 4 4m-4-4-4 4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg></a>
+    <a title="Departments"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 21h18M5 21V9l7-5 7 5v12M9 21v-6h6v6"/></svg></a>
+    <a title="Reports"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19V5m5 14V9m5 10V3m5 16v-6"/></svg></a>
+    <span class="rail-label">RECORDS ARCHIVE</span>
+  </nav>
+
+  <main>
+    <div class="stats">
+      <div class="stat">
+        <div class="num" id="statTotal">0</div>
+        <div class="lbl">Total personnel files</div>
+      </div>
+      <div class="stat">
+        <div class="num" id="statPct">0%</div>
+        <div class="lbl">Digitized to date</div>
+      </div>
+      <div class="stat pending">
+        <div class="num" id="statPending">0</div>
+        <div class="lbl">Awaiting scan</div>
+      </div>
+      <div class="stat today">
+        <div class="num">3</div>
+        <div class="lbl">Uploaded today</div>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <h2>Files</h2>
+      <select id="deptFilter">
+        <option value="">All departments</option>
+        <option>Human Resources</option>
+        <option>Finance</option>
+        <option>Operations</option>
+        <option>IT &amp; Systems</option>
+        <option>Sales</option>
+        <option>Customer Support</option>
+      </select>
+      <select id="statusFilter">
+        <option value="">All statuses</option>
+        <option value="digitized">Digitized</option>
+        <option value="pending">Pending scan</option>
+      </select>
+      <button class="btn-ghost" onclick="openUpload()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3v12m0-12 4 4m-4-4-4 4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+        Upload scan
+      </button>
+      <button class="btn-primary" onclick="openNewRecord()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
+        New file
+      </button>
+    </div>
+
+    <div class="grid" id="fileGrid"></div>
+  </main>
+</div>
+
+<!-- Upload modal -->
+<div class="modal-bg" id="uploadModal">
+  <div class="modal">
+    <h3>Upload document</h3>
+    <div class="modal-sub">Attach a scanned document to an employee's file.</div>
+    <div class="field">
+      <label>Employee file</label>
+      <select id="uploadTarget"></select>
+    </div>
+    <div class="dropzone" id="dropzone" onclick="document.getElementById('fileInput').click()">
+      <input type="file" id="fileInput" accept=".pdf,.jpg,.jpeg,.png" style="display:none" onchange="handleFileSelect(this.files)">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#8B8666" stroke-width="1.8"><path d="M12 3v12m0-12 4 4m-4-4-4 4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+      <div id="dropzoneText">Drag a scanned file here, or click to browse</div>
+      <div style="font-size:11px;margin-top:4px;color:#A19E8A;" id="dropzoneHint">PDF, JPG or PNG — up to 20MB</div>
+    </div>
+    <div class="modal-actions">
+      <button class="cancel" onclick="closeModal('uploadModal')">Cancel</button>
+      <button class="confirm" onclick="attachDoc()">Attach file</button>
+    </div>
+  </div>
+</div>
+
+<!-- New record modal -->
+<div class="modal-bg" id="newRecordModal">
+  <div class="modal">
+    <h3>New personnel file</h3>
+    <div class="modal-sub">Create a record for a new employee.</div>
+    <div class="field">
+      <label>Full name</label>
+      <input id="nrName" type="text" placeholder="e.g. Grace Namuli">
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Job title</label>
+        <input id="nrRole" type="text" placeholder="e.g. Accountant">
+      </div>
+      <div class="field">
+        <label>Department</label>
+        <select id="nrDept">
+          <option>Human Resources</option>
+          <option>Finance</option>
+          <option>Operations</option>
+          <option>IT &amp; Systems</option>
+          <option>Sales</option>
+          <option>Customer Support</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="cancel" onclick="closeModal('newRecordModal')">Cancel</button>
+      <button class="confirm" onclick="createRecord()">Create file</button>
+    </div>
+  </div>
+</div>
+
+<!-- Detail modal -->
+<div class="modal-bg" id="detailModal">
+  <div class="modal wide" id="detailContent"></div>
+</div>
+
+<script>
+let files = [
+  {name:"Grace Namuli", role:"HR Officer", ref:"EMP-2011-04521", dept:"Human Resources", status:"digitized", updated:"2 days ago", hired:"14 Mar 2011", docs:[{name:"Employment contract.pdf", date:"14 Mar 2011"},{name:"National ID copy.pdf", date:"14 Mar 2011"},{name:"Performance review 2025.pdf", date:"2 days ago"}]},
+  {name:"Peter Okello", role:"Software Engineer", ref:"EMP-2016-09102", dept:"IT & Systems", status:"pending", updated:"—", hired:"3 Jun 2016", docs:[]},
+  {name:"Susan Achen", role:"Accountant", ref:"EMP-2009-01187", dept:"Finance", status:"digitized", updated:"1 week ago", hired:"22 Jan 2009", docs:[{name:"Employment contract.pdf", date:"22 Jan 2009"},{name:"Tax registration.pdf", date:"1 week ago"}]},
+  {name:"David Mugisha", role:"Operations Manager", ref:"EMP-1998-00342", dept:"Operations", status:"pending", updated:"—", hired:"9 Sep 1998", docs:[]},
+  {name:"Irene Nakato", role:"Sales Executive", ref:"EMP-2013-06678", dept:"Sales", status:"digitized", updated:"4 days ago", hired:"17 Nov 2013", docs:[{name:"Employment contract.pdf", date:"17 Nov 2013"}]},
+  {name:"Sam Byaruhanga", role:"IT Support Lead", ref:"EMP-2004-02290", dept:"IT & Systems", status:"digitized", updated:"3 weeks ago", hired:"2 Apr 2004", docs:[{name:"Employment contract.pdf", date:"2 Apr 2004"},{name:"Training certificate.pdf", date:"3 weeks ago"}]},
+  {name:"Betty Adong", role:"Customer Support Agent", ref:"EMP-2019-11209", dept:"Customer Support", status:"pending", updated:"—", hired:"5 Feb 2019", docs:[]},
+  {name:"Emmanuel Kato", role:"Finance Assistant", ref:"EMP-2007-03954", dept:"Finance", status:"digitized", updated:"6 days ago", hired:"30 Aug 2007", docs:[{name:"Employment contract.pdf", date:"30 Aug 2007"}]},
+  {name:"Ruth Tumusiime", role:"HR Assistant", ref:"EMP-2001-00871", dept:"Human Resources", status:"pending", updated:"—", hired:"11 Dec 2001", docs:[]},
+];
+
+function initials(n){return n.split(" ").map(w=>w[0]).slice(0,2).join("").toUpperCase();}
+function nextRef(){
+  const year = new Date().getFullYear();
+  const seq = String(1000 + files.length).slice(-5);
+  return `EMP-${year}-${seq}`;
+}
+
+function updateStats(){
+  const total = files.length;
+  const digitized = files.filter(f=>f.status==='digitized').length;
+  document.getElementById('statTotal').textContent = total.toLocaleString();
+  document.getElementById('statPct').textContent = total ? Math.round(digitized/total*100)+'%' : '0%';
+  document.getElementById('statPending').textContent = (total-digitized).toLocaleString();
+}
+
+function render(){
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  const dept = document.getElementById('deptFilter').value;
+  const status = document.getElementById('statusFilter').value;
+  const grid = document.getElementById('fileGrid');
+  const results = files.filter(f=>{
+    const matchesQ = !q || f.name.toLowerCase().includes(q) || f.ref.toLowerCase().includes(q) || f.dept.toLowerCase().includes(q);
+    const matchesDept = !dept || f.dept===dept;
+    const matchesStatus = !status || f.status===status;
+    return matchesQ && matchesDept && matchesStatus;
+  });
+
+  grid.innerHTML = results.length ? results.map(f=>`
+    <div class="card">
+      <div class="card-top">
+        <div class="avatar">${initials(f.name)}</div>
+        <div>
+          <div class="card-name">${f.name}</div>
+          <div class="card-role">${f.role} · ${f.dept}</div>
+          <div class="card-ref">${f.ref}</div>
+        </div>
+      </div>
+      <div class="card-meta">
+        <span>Updated ${f.updated}</span>
+        <span class="stamp ${f.status}">${f.status==='digitized'?'Digitized':'Pending'}</span>
+      </div>
+      <div class="card-actions">
+        <button class="view" onclick="openDetail('${f.ref}')">View file</button>
+        <button class="scan" onclick="openUpload('${f.ref}')">Upload scan</button>
+      </div>
+    </div>
+  `).join("") : `<div class="empty">No files match this search. Try a different name, employee ID, or department.</div>`;
+
+  updateStats();
+}
+
+let selectedFile = null;
+
+function openUpload(ref){
+  const sel = document.getElementById('uploadTarget');
+  sel.innerHTML = files.map(f=>`<option value="${f.ref}" ${f.ref===ref?'selected':''}>${f.ref} — ${f.name}</option>`).join("");
+  resetDropzone();
+  document.getElementById('uploadModal').classList.add('show');
+}
+
+function resetDropzone(){
+  selectedFile = null;
+  document.getElementById('fileInput').value = '';
+  document.getElementById('dropzoneText').textContent = 'Drag a scanned file here, or click to browse';
+  const hint = document.getElementById('dropzoneHint');
+  hint.style.color = '#A19E8A';
+  hint.textContent = 'PDF, JPG or PNG — up to 20MB';
+}
+
+function handleFileSelect(fileList){
+  if(!fileList || !fileList.length) return;
+  selectedFile = fileList[0];
+  const sizeKb = Math.round(selectedFile.size / 1024);
+  document.getElementById('dropzoneText').textContent = selectedFile.name;
+  const hint = document.getElementById('dropzoneHint');
+  hint.style.color = '#A19E8A';
+  hint.textContent = `${sizeKb} KB — click to choose a different file`;
+}
+
+const dz = document.getElementById('dropzone');
+dz.addEventListener('dragover', e=>{ e.preventDefault(); dz.style.borderColor = 'var(--gold)'; });
+dz.addEventListener('dragleave', ()=>{ dz.style.borderColor = ''; });
+dz.addEventListener('drop', e=>{
+  e.preventDefault();
+  dz.style.borderColor = '';
+  handleFileSelect(e.dataTransfer.files);
+});
+
+function attachDoc(){
+  if(!selectedFile){
+    // No file chosen yet — open the picker instead of silently proceeding.
+    document.getElementById('dropzoneHint').style.color = 'var(--stamp-red)';
+    document.getElementById('dropzoneHint').textContent = 'Choose a file first';
+    document.getElementById('fileInput').click();
+    return;
+  }
+  const ref = document.getElementById('uploadTarget').value;
+  const f = files.find(x=>x.ref===ref);
+  if(f){
+    f.docs.push({name: selectedFile.name, date:"just now"});
+    f.status = "digitized";
+    f.updated = "just now";
+  }
+  closeModal('uploadModal');
+  render();
+}
+
+function openNewRecord(){
+  document.getElementById('nrName').value = '';
+  document.getElementById('nrRole').value = '';
+  document.getElementById('newRecordModal').classList.add('show');
+}
+
+function createRecord(){
+  const name = document.getElementById('nrName').value.trim();
+  const role = document.getElementById('nrRole').value.trim();
+  const dept = document.getElementById('nrDept').value;
+  if(!name || !role){ return; }
+  files.unshift({
+    name, role, dept, status:"pending", updated:"—",
+    ref: nextRef(), hired: new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}),
+    docs: []
+  });
+  closeModal('newRecordModal');
+  render();
+}
+
+function openDetail(ref){
+  const f = files.find(x=>x.ref===ref);
+  if(!f) return;
+  document.getElementById('detailContent').innerHTML = `
+    <div class="detail-top">
+      <div class="avatar">${initials(f.name)}</div>
+      <div>
+        <div class="card-name">${f.name}</div>
+        <div class="card-role">${f.role} · ${f.dept}</div>
+      </div>
+      <span class="stamp ${f.status}" style="margin-left:auto;">${f.status==='digitized'?'Digitized':'Pending'}</span>
+    </div>
+    <div class="detail-grid">
+      <div><span class="k">Employee ID</span><span class="v">${f.ref}</span></div>
+      <div><span class="k">Department</span><span class="v">${f.dept}</span></div>
+      <div><span class="k">Date hired</span><span class="v">${f.hired}</span></div>
+      <div><span class="k">Last updated</span><span class="v">${f.updated}</span></div>
+    </div>
+    <div class="modal-sub" style="margin-bottom:8px;">Attached documents</div>
+    <ul class="doc-list">
+      ${f.docs.length ? f.docs.map(d=>`
+        <li>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/><path d="M15 2v5h5"/></svg>
+          <span class="doc-name">${d.name}</span>
+          <span class="doc-date">${d.date}</span>
+        </li>`).join("") : `<li style="color:var(--text-soft);">No documents on file yet.</li>`}
+    </ul>
+    <div class="modal-actions">
+      <button class="cancel" onclick="closeModal('detailModal')">Close</button>
+      <button class="confirm" onclick="closeModal('detailModal'); openUpload('${f.ref}')">Upload scan</button>
+    </div>
+  `;
+  document.getElementById('detailModal').classList.add('show');
+}
+
+function closeModal(id){document.getElementById(id).classList.remove('show');}
+
+document.getElementById('searchInput').addEventListener('input', render);
+document.getElementById('deptFilter').addEventListener('change', render);
+document.getElementById('statusFilter').addEventListener('change', render);
+document.querySelectorAll('.modal-bg').forEach(bg=>{
+  bg.addEventListener('click', e=>{ if(e.target===bg) bg.classList.remove('show'); });
+});
+
+render();
+</script>
+
+</body>
+</html>
